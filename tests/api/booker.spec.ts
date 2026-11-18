@@ -17,6 +17,7 @@ test.describe('reservas autenticadas con token', () => {
     created = sampleBooking(`QA${Date.now()}`);
     const response = await request.post('/auth', {
       data: { username: 'admin', password: 'password123' },
+      timeout: 20_000,
     });
     expect(response.status()).toBe(200);
     const body = await response.json();
@@ -29,11 +30,12 @@ test.describe('reservas autenticadas con token', () => {
     if (!bookingId || !token) return;
     await request.delete(`/booking/${bookingId}`, {
       headers: { Cookie: `token=${token}` },
+      timeout: 20_000,
     });
   });
 
   test('crear una reserva', async ({ request }) => {
-    const response = await request.post('/booking', { data: created });
+    const response = await request.post('/booking', { data: created, timeout: 20_000 });
     expect(response.status()).toBe(200);
 
     const body = await response.json();
@@ -43,7 +45,7 @@ test.describe('reservas autenticadas con token', () => {
   });
 
   test('consultar la reserva creada', async ({ request }) => {
-    const response = await request.get(`/booking/${bookingId}`);
+    const response = await request.get(`/booking/${bookingId}`, { timeout: 20_000 });
     expect(response.status()).toBe(200);
     expect(await response.json()).toMatchObject(created);
   });
@@ -52,28 +54,33 @@ test.describe('reservas autenticadas con token', () => {
     const response = await request.put(`/booking/${bookingId}`, {
       headers: { Cookie: `token=${token}` },
       data: updated,
+      timeout: 20_000,
     });
     expect(response.status()).toBe(200);
     expect(await response.json()).toMatchObject(updated);
 
-    const stored = await request.get(`/booking/${bookingId}`);
+    const stored = await request.get(`/booking/${bookingId}`, { timeout: 20_000 });
     expect(stored.status()).toBe(200);
     expect(await stored.json()).toMatchObject(updated);
   });
 
   test('rechazar la modificación si no hay token', async ({ request }) => {
-    const response = await request.put(`/booking/${bookingId}`, { data: created });
+    const response = await request.put(`/booking/${bookingId}`, {
+      data: created,
+      timeout: 20_000,
+    });
     expect(response.status()).toBe(403);
   });
 
   test('borrar la reserva con el token', async ({ request }) => {
     const response = await request.delete(`/booking/${bookingId}`, {
       headers: { Cookie: `token=${token}` },
+      timeout: 20_000,
     });
     expect(response.status()).toBe(201);
     expect(await response.text()).toContain('Created');
 
-    const missing = await request.get(`/booking/${bookingId}`);
+    const missing = await request.get(`/booking/${bookingId}`, { timeout: 20_000 });
     expect(missing.status()).toBe(404);
     bookingId = 0;
   });

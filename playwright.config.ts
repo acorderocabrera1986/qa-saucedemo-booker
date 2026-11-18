@@ -1,7 +1,14 @@
+import dns from 'dns';
 import { defineConfig, devices } from '@playwright/test';
+
+dns.setDefaultResultOrder('ipv4first');
 
 const sauceDemo = 'https://www.saucedemo.com';
 const booker = 'https://restful-booker.herokuapp.com';
+
+// En local, PW_USE_SYSTEM_BROWSERS=1 usa el Chrome instalado.
+// Firefox, y Chromium en CI, los descarga Playwright.
+const useSystemBrowsers = process.env.PW_USE_SYSTEM_BROWSERS === '1';
 
 export default defineConfig({
   timeout: 30_000,
@@ -19,7 +26,11 @@ export default defineConfig({
     {
       name: 'chromium',
       testDir: './tests/e2e',
-      use: { ...devices['Desktop Chrome'], baseURL: sauceDemo },
+      use: {
+        ...devices['Desktop Chrome'],
+        ...(useSystemBrowsers ? { channel: 'chrome' as const } : {}),
+        baseURL: sauceDemo,
+      },
     },
     {
       name: 'firefox',
@@ -29,7 +40,8 @@ export default defineConfig({
     {
       name: 'api',
       testDir: './tests/api',
-      timeout: 60_000,
+      timeout: 45_000,
+      retries: 2,
       use: {
         baseURL: booker,
         extraHTTPHeaders: {
