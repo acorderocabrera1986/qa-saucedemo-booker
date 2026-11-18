@@ -1,0 +1,16 @@
+{
+  "name": "qa-saucedemo-booker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Prueba de automatización: Playwright en SauceDemo y Restful Booker, y carga con JMeter.",
+  "scripts": {
+    "test": "playwright test",
+    "test:e2e": "playwright test --project=chromium --project=firefox",
+    "test:api": "playwright test --project=api",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "typescript": "^5.9.3"
+  }
+}
