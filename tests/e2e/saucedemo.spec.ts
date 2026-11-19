@@ -1,33 +1,26 @@
 import { test } from './fixtures';
+import { catalog, customer, itemTotalLabel, users } from './data/shop';
+import { copy } from './selectors';
 
-const password = 'secret_sauce';
-
-const backpack = {
-  slug: 'sauce-labs-backpack',
-  name: 'Sauce Labs Backpack',
-};
-const bikeLight = {
-  slug: 'sauce-labs-bike-light',
-  name: 'Sauce Labs Bike Light',
-};
+const purchase = [catalog.backpack, catalog.bikeLight];
 
 test.beforeEach(async ({ loginPage }) => {
   await loginPage.open();
 });
 
 test('un usuario válido entra al inventario', async ({ loginPage, inventoryPage }) => {
-  await loginPage.login('standard_user', password);
+  await loginPage.login(users.standard.username, users.standard.password);
   await inventoryPage.expectLoaded();
 });
 
 test('una contraseña incorrecta no entra y muestra el error', async ({ loginPage }) => {
-  await loginPage.login('standard_user', 'clave-incorrecta');
-  await loginPage.expectError('Username and password do not match');
+  await loginPage.login(users.invalidPassword.username, users.invalidPassword.password);
+  await loginPage.expectError(copy.credentialsMismatch);
 });
 
 test('un usuario bloqueado no entra', async ({ loginPage }) => {
-  await loginPage.login('locked_out_user', password);
-  await loginPage.expectError('Sorry, this user has been locked out');
+  await loginPage.login(users.locked.username, users.locked.password);
+  await loginPage.expectError(copy.lockedOut);
 });
 
 test('añadir dos productos y completar la compra', async ({
@@ -36,17 +29,17 @@ test('añadir dos productos y completar la compra', async ({
   cartPage,
   checkoutPage,
 }) => {
-  await loginPage.login('standard_user', password);
+  await loginPage.login(users.standard.username, users.standard.password);
   await inventoryPage.expectLoaded();
-  await inventoryPage.addProducts(backpack.slug, bikeLight.slug);
-  await inventoryPage.expectCartCount(2);
+  await inventoryPage.addProducts(...purchase.map((product) => product.slug));
+  await inventoryPage.expectCartCount(purchase.length);
   await inventoryPage.openCart();
 
-  await cartPage.expectItems([backpack.name, bikeLight.name]);
+  await cartPage.expectItems(purchase.map((product) => product.name));
   await cartPage.checkout();
 
-  await checkoutPage.fillCustomer('Ada', 'Lovelace', '28001');
-  await checkoutPage.expectOverview('Item total: $39.98');
+  await checkoutPage.fillCustomer(customer.firstName, customer.lastName, customer.postalCode);
+  await checkoutPage.expectOverview(itemTotalLabel(purchase.map((product) => product.price)));
   await checkoutPage.finish();
   await checkoutPage.expectComplete();
   await checkoutPage.expectCartEmpty();

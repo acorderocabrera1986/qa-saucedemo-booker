@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { sampleBooking, type Booking } from './booking';
+import { BookerClient } from './booker-client';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -15,10 +16,7 @@ test.describe('reservas autenticadas con token', () => {
 
   test.beforeAll(async ({ request }) => {
     created = sampleBooking(`QA${Date.now()}`);
-    const response = await request.post('/auth', {
-      data: { username: 'admin', password: 'password123' },
-      timeout: 20_000,
-    });
+    const response = await new BookerClient(request).authenticate();
     expect(response.status()).toBe(200);
     const body = await response.json();
     expect(body.token).toEqual(expect.any(String));
@@ -28,14 +26,11 @@ test.describe('reservas autenticadas con token', () => {
 
   test.afterAll(async ({ request }) => {
     if (!bookingId || !token) return;
-    await request.delete(`/booking/${bookingId}`, {
-      headers: { Cookie: `token=${token}` },
-      timeout: 20_000,
-    });
+    await new BookerClient(request).remove(bookingId, token);
   });
 
   test('crear una reserva', async ({ request }) => {
-    const response = await request.post('/booking', { data: created, timeout: 20_000 });
+    const response = await new BookerClient(request).create(created);
     expect(response.status()).toBe(200);
 
     const body = await response.json();
@@ -45,42 +40,34 @@ test.describe('reservas autenticadas con token', () => {
   });
 
   test('consultar la reserva creada', async ({ request }) => {
-    const response = await request.get(`/booking/${bookingId}`, { timeout: 20_000 });
+    const response = await new BookerClient(request).get(bookingId);
     expect(response.status()).toBe(200);
     expect(await response.json()).toMatchObject(created);
   });
 
   test('modificar la reserva con el token', async ({ request }) => {
-    const response = await request.put(`/booking/${bookingId}`, {
-      headers: { Cookie: `token=${token}` },
-      data: updated,
-      timeout: 20_000,
-    });
+    const api = new BookerClient(request);
+    const response = await api.replace(bookingId, updated, token);
     expect(response.status()).toBe(200);
     expect(await response.json()).toMatchObject(updated);
 
-    const stored = await request.get(`/booking/${bookingId}`, { timeout: 20_000 });
+    const stored = await api.get(bookingId);
     expect(stored.status()).toBe(200);
     expect(await stored.json()).toMatchObject(updated);
   });
 
   test('rechazar la modificación si no hay token', async ({ request }) => {
-    const response = await request.put(`/booking/${bookingId}`, {
-      data: created,
-      timeout: 20_000,
-    });
+    const response = await new BookerClient(request).replace(bookingId, created);
     expect(response.status()).toBe(403);
   });
 
   test('borrar la reserva con el token', async ({ request }) => {
-    const response = await request.delete(`/booking/${bookingId}`, {
-      headers: { Cookie: `token=${token}` },
-      timeout: 20_000,
-    });
+    const api = new BookerClient(request);
+    const response = await api.remove(bookingId, token);
     expect(response.status()).toBe(201);
     expect(await response.text()).toContain('Created');
 
-    const missing = await request.get(`/booking/${bookingId}`, { timeout: 20_000 });
+    const missing = await api.get(bookingId);
     expect(missing.status()).toBe(404);
     bookingId = 0;
   });

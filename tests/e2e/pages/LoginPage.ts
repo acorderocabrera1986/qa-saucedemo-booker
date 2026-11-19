@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test';
+import { route, testId } from '../selectors';
 
 export class LoginPage {
   readonly username: Locator;
@@ -7,10 +8,10 @@ export class LoginPage {
   readonly error: Locator;
 
   constructor(private readonly page: Page) {
-    this.username = page.getByTestId('username');
-    this.password = page.getByTestId('password');
-    this.loginButton = page.getByTestId('login-button');
-    this.error = page.getByTestId('error');
+    this.username = page.getByTestId(testId.username);
+    this.password = page.getByTestId(testId.password);
+    this.loginButton = page.getByTestId(testId.loginButton);
+    this.error = page.getByTestId(testId.error);
   }
 
   async open() {
@@ -26,6 +27,6 @@ export class LoginPage {
   async expectError(message: string) {
     await expect(this.error).toBeVisible();
     await expect(this.error).toContainText(message);
-    await expect(this.page).toHaveURL(/\/$/);
+    await expect(this.page).toHaveURL(route.login);
   }
 }
