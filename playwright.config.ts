@@ -37,7 +37,7 @@ export default defineConfig({
       testDir: './tests/e2e',
       use: {
         ...devices['Desktop Firefox'],
-        ...(useSystemBrowsers ? { channel: 'firefox' as const } : {}),
+        ...(useSystemBrowsers ? { channel: 'moz-firefox' as const } : {}),
         baseURL: sauceDemo,
       },
     },
