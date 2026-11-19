@@ -6,8 +6,8 @@ dns.setDefaultResultOrder('ipv4first');
 const sauceDemo = 'https://www.saucedemo.com';
 const booker = 'https://restful-booker.herokuapp.com';
 
-// En local, PW_USE_SYSTEM_BROWSERS=1 usa el Chrome instalado.
-// Firefox, y Chromium en CI, los descarga Playwright.
+// En local, PW_USE_SYSTEM_BROWSERS=1 usa el Chrome y el Firefox del sistema.
+// En CI no se define: Playwright descarga Chromium y Firefox.
 const useSystemBrowsers = process.env.PW_USE_SYSTEM_BROWSERS === '1';
 
 export default defineConfig({
@@ -35,7 +35,11 @@ export default defineConfig({
     {
       name: 'firefox',
       testDir: './tests/e2e',
-      use: { ...devices['Desktop Firefox'], baseURL: sauceDemo },
+      use: {
+        ...devices['Desktop Firefox'],
+        ...(useSystemBrowsers ? { channel: 'firefox' as const } : {}),
+        baseURL: sauceDemo,
+      },
     },
     {
       name: 'api',
