@@ -101,7 +101,7 @@ JMeter:
 - Playwright cubre la interfaz y la API. JMeter solo la carga, porque el enunciado pide esa herramienta y su informe HTML.
 - Los dos navegadores aplican a SauceDemo. Repetir el CRUD en cada navegador no aporta: no hay página que pintar.
 - SauceDemo marca los controles con `data-test`. Playwright busca `data-testid` por defecto, así que el config usa `testIdAttribute: 'data-test'`. Cada `data-test`, cada ruta y cada texto fijo viven en `tests/e2e/selectors.ts`. Las páginas solo leen esas constantes. Los usuarios, el catálogo y el comprador están en `tests/e2e/data/shop.ts`.
-- Las rutas y la cookie del token de Restful Booker viven en `tests/api/booker-client.ts`. El spec comprueba códigos y cuerpo; no arma URLs.
+- Las rutas y la cookie del token de Restful Booker viven en `tests/api/booker-client.ts`. Los códigos 200, 201, 403 y 404, y el texto del borrado, viven en `tests/api/contract.ts`. El spec comprueba código y cuerpo; no arma URLs.
 - Sigue siendo un solo repositorio. Separar la tienda, la API, JMeter y Actions en repos distintos partiría el workflow y el informe. El avance se ve en los commits, no en repos paralelos.
 - La API exige `Accept: application/json`. Sin esa cabecera Restful Booker contesta XML.
 - La autenticación del enunciado es el token, así que el `PUT` y el `DELETE` mandan `Cookie: token=...`. No uso el Basic Auth, aunque la API también lo acepta.

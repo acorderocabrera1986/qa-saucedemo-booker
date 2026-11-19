@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { sampleBooking, type Booking } from './booking';
 import { BookerClient } from './booker-client';
+import { deleteConfirmation, httpStatus } from './contract';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -17,7 +18,7 @@ test.describe('reservas autenticadas con token', () => {
   test.beforeAll(async ({ request }) => {
     created = sampleBooking(`QA${Date.now()}`);
     const response = await new BookerClient(request).authenticate();
-    expect(response.status()).toBe(200);
+    expect(response.status()).toBe(httpStatus.ok);
     const body = await response.json();
     expect(body.token).toEqual(expect.any(String));
     expect(body.token.length).toBeGreaterThan(0);
@@ -31,7 +32,7 @@ test.describe('reservas autenticadas con token', () => {
 
   test('crear una reserva', async ({ request }) => {
     const response = await new BookerClient(request).create(created);
-    expect(response.status()).toBe(200);
+    expect(response.status()).toBe(httpStatus.ok);
 
     const body = await response.json();
     expect(body.bookingid).toEqual(expect.any(Number));
@@ -41,34 +42,34 @@ test.describe('reservas autenticadas con token', () => {
 
   test('consultar la reserva creada', async ({ request }) => {
     const response = await new BookerClient(request).get(bookingId);
-    expect(response.status()).toBe(200);
+    expect(response.status()).toBe(httpStatus.ok);
     expect(await response.json()).toMatchObject(created);
   });
 
   test('modificar la reserva con el token', async ({ request }) => {
     const api = new BookerClient(request);
     const response = await api.replace(bookingId, updated, token);
-    expect(response.status()).toBe(200);
+    expect(response.status()).toBe(httpStatus.ok);
     expect(await response.json()).toMatchObject(updated);
 
     const stored = await api.get(bookingId);
-    expect(stored.status()).toBe(200);
+    expect(stored.status()).toBe(httpStatus.ok);
     expect(await stored.json()).toMatchObject(updated);
   });
 
   test('rechazar la modificación si no hay token', async ({ request }) => {
     const response = await new BookerClient(request).replace(bookingId, created);
-    expect(response.status()).toBe(403);
+    expect(response.status()).toBe(httpStatus.forbidden);
   });
 
   test('borrar la reserva con el token', async ({ request }) => {
     const api = new BookerClient(request);
     const response = await api.remove(bookingId, token);
-    expect(response.status()).toBe(201);
-    expect(await response.text()).toContain('Created');
+    expect(response.status()).toBe(httpStatus.created);
+    expect(await response.text()).toContain(deleteConfirmation);
 
     const missing = await api.get(bookingId);
-    expect(missing.status()).toBe(404);
+    expect(missing.status()).toBe(httpStatus.notFound);
     bookingId = 0;
   });
 });
