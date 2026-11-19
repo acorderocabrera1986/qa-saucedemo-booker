@@ -14,7 +14,11 @@ if (-not $bat -or -not (Test-Path $bat)) {
 
 $results = Join-Path $root 'jmeter\results'
 $report = Join-Path $root 'jmeter\html-report'
+$log = Join-Path $results 'results.jtl'
 New-Item -ItemType Directory -Force -Path $results | Out-Null
+if (Test-Path $log) {
+  Remove-Item -Force $log
+}
 if (Test-Path $report) {
   Remove-Item -Recurse -Force $report
 }
@@ -22,7 +26,6 @@ if (Test-Path $report) {
 # JMeter guarda en JMETER_BIN la carpeta bin. Si esa variable apunta al .bat, no encuentra el jar.
 Remove-Item Env:JMETER_BIN -ErrorAction SilentlyContinue
 $plan = Join-Path $root 'jmeter\booker-load-test.jmx'
-$log = Join-Path $results 'results.jtl'
 $bin = Split-Path -Parent $bat
 Push-Location $bin
 try {
